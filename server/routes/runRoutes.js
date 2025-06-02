@@ -1,10 +1,10 @@
-const express  = require("express");
+const express = require("express");
 const router = express.Router();
-const { getRun, createRun } = require("../controller/runController");
+const { getRuns, createRun } = require("../controllers/runController");
 
-// gets all runs
-router.get("/", getRun);
-// creates a new run
+console.log("✅ runRoutes loaded");
+
+router.get("/", getRuns);
 router.post("/", createRun);
 
 module.exports = router;

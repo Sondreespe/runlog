@@ -1,16 +1,20 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const runRoutes = require("./routes/runRoutes");
-const app = express();
-
 require("dotenv").config();
 
+const app = express();
+const runRoutes = require("./routes/runRoutes");
+
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Routes
 app.use("/api/runs", runRoutes);
 
-const PORT = process.env.PORT || 5000;
+// Start server + DB
+const PORT = process.env.PORT || 3000;
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
@@ -19,6 +23,13 @@ mongoose.connect(process.env.MONGO_URI)
   })
   .catch(err => console.log(err));
 
+// Test route
 app.get("/", (req, res) => {
   res.send("RunTracker API is live!");
+});
+
+// Global 404 fallback
+app.use((req, res) => {
+  console.log("🔴 Global fallback – no route matched");
+  res.status(404).json({ error: "Not found" });
 });

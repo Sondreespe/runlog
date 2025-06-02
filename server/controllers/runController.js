@@ -1,11 +1,13 @@
 const Run = require("../models/run");
 
 // GET /api/runs
-const getRun = async (req, res) => {
+const getRuns = async (req, res) => {
   try {
     const runs = await Run.find().sort({ date: -1 });
-    res.json(runs);
+    console.log("✅ Fetched runs:", runs);
+    res.status(200).json(runs);
   } catch (err) {
+    console.error("❌ Error fetching runs:", err);
     res.status(500).json({ error: "Failed to fetch runs" });
   }
 };
@@ -26,13 +28,15 @@ const createRun = async (req, res) => {
     });
 
     const savedRun = await newRun.save();
+    console.log("✅ Saved run:", savedRun);
     res.status(201).json(savedRun);
   } catch (err) {
-    res.status(500).json({ error: "Failed to create run" });
+    console.error("❌ Error saving run:", err);
+    res.status(500).json({ error: "Failed to save run" });
   }
 };
 
 module.exports = {
-  getRun,
+  getRuns,
   createRun,
 };

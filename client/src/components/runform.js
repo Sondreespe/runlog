@@ -5,18 +5,19 @@ function RunForm() {
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => { // handles form submission
+    // prevents the default form submission behavior
     e.preventDefault();
     try {
-      await axios.post("/api/runs", { distance, duration });
-      setDistance("");
+      await axios.post("/api/runs", { distance, duration }); // sends POST to /api/runs
+      setDistance("");// resets 
       setDuration("");
-      window.location.reload(); // for enkelhet – laster inn på nytt
+      window.location.reload(); // reloads the page to show the new run
     } catch (err) {
       console.error("Error adding run:", err);
     }
   };
-
+  // builds the form for adding a new run
   return (
     <form onSubmit={handleSubmit}>
       <h2>Legg til ny økt</h2>

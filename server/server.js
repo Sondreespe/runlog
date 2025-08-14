@@ -4,14 +4,14 @@ const cors = require("cors");// middleware such that frontend can access backend
 require("dotenv").config();
 
 const app = express();
-const runRoutes = require("./routes/runRoutes");
+const runRoutes = require("./routes/activityRoutes");
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api/runs", runRoutes); // all requests from api/runs directed to runRoutes( where actions are defined)
+app.use("/api/activities", require('./routes/activityRoutes')); // all requests from api/runs directed to runRoutes( where actions are defined)
 
 // Start server + DB
 const PORT = process.env.PORT || 2000;

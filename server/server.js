@@ -1,22 +1,22 @@
-const express = require("express"); // importing required modules
-const mongoose = require("mongoose");// to communicate with MongoDB(database)
-const cors = require("cors");// middleware such that frontend can access backend at diff ports 
+const express = require("express"); // importerer express for routing
+const mongoose = require("mongoose");// for database
+const cors = require("cors");// så frontend kan kommunisere med backend
 require("dotenv").config();
 
 const app = express();
 const runRoutes = require("./routes/activityRoutes");
 
-// Middleware
+
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Ruter
 app.use("/api/activities", require('./routes/activityRoutes')); // all requests from api/runs directed to runRoutes( where actions are defined)
 
 // Start server + DB
 const PORT = process.env.PORT || 2000;
 
-// connects mongodb to mongo URI, logs success or error
+// kobler til MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
@@ -26,7 +26,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 
-// Global 404 fallback, since ive had some issues with 404 in the start.
+// Global 404 
 app.use((req, res) => {
   console.log("Global fallback – no route matched");
   res.status(404).json({ error: "Not found" });

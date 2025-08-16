@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate, useLocation }
 import axios from "axios";
 import { Trophy, List, PlusCircle, Layers, ArrowLeft, Clock } from "lucide-react";
 
+const WARM_ORANGE = "#ff7a1a";
+
 /* ================================
    Utils + API
 ================================ */
@@ -38,7 +40,7 @@ const parseDuration = (val) => {
 };
 
 
-// Sport-spesifikke visningsmetrikker
+// spesifike formater for sportene
 const fmtPaceMinPerKm = (seconds, km) => {
   const s = Number(seconds), d = Number(km);
   if (!Number.isFinite(s) || !Number.isFinite(d) || d <= 0) return "–";
@@ -79,7 +81,7 @@ const startOfWeek = (d) => {
   dt.setDate(dt.getDate() - day);
   return dt;
 };
-// 6x7 rutenett for måned
+// 6x7 rutenett for kalender
 const buildMonthGrid = (year, monthIdx) => {
   const first = new Date(year, monthIdx, 1);
   const firstDow = (first.getDay() + 6) % 7; // 0=Mon
@@ -88,7 +90,7 @@ const buildMonthGrid = (year, monthIdx) => {
   for (let i = 0; i < 42; i++) days.push(addDays(start, i));
   return days;
 };
-// ISO-ukenummer og etikett "Uke NN – dd.mm–dd.mm"
+// ukenummer og etikett "Uke NN – dd.mm–dd.mm"
 const getISOWeekNumber = (date) => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
@@ -113,7 +115,7 @@ const formatLocalDatetime = (d = new Date()) => {
 };
 
 /* ================================
-   Layout / Shell
+   Layout
 ================================ */
 
 const Shell = ({ children }) => {
@@ -174,10 +176,10 @@ const Nav = ({ to, label, icon, overlay = false }) => (
 );
 
 /* ================================
-   Home (full-screen hero)
+   Home 
 ================================ */
 
-// Hook: viewport height (for mobil-UI)
+// Hook: viewport height 
 const useViewportHeight = () => {
   const [h, setH] = useState(null);
   useEffect(() => {
@@ -193,7 +195,7 @@ const useViewportHeight = () => {
   return h;
 };
 
-const HERO_IMAGE_URL = "/frontpage2.jpg";
+const FRONTPAGE = "/frontpage2.jpg";
 
 const Home = () => {
   const vh = useViewportHeight();
@@ -202,7 +204,7 @@ const Home = () => {
       <section style={{ position: 'relative', width: '100vw', left: '50%', transform: 'translateX(-50%)' }}>
         <div style={{ position: 'relative', height: vh ? `${vh}px` : '100vh' }}>
           <img
-            src={HERO_IMAGE_URL}
+            src={FRONTPAGE}
             alt="kilometers. "
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />

@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { Trophy, List, PlusCircle, Layers, ArrowLeft, Clock } from "lucide-react";
+import { Trophy, List, PlusCircle, Layers, ArrowLeft } from "lucide-react";
+import PlanImportBlocks from "./components/planImportBlocks";
+import CalendarMonth from "./components/calendarMonth";
 
-const WARM_ORANGE = "#ff7a1a";
 
 /* ================================
    Utils + API
@@ -443,16 +444,15 @@ const ActivitiesPage = () => {
     })();
   }, []);
 
-  // Map av dag -> sports som skjedde den dagen (for prikker i kalenderen)
-  const daySports = useMemo(() => {
-    const map = new Map();
-    for (const a of activities) {
-      const key = dateKey(a.date);
-      if (!map.has(key)) map.set(key, new Set());
-      map.get(key).add(a.sport);
-    }
-    return map;
-  }, [activities]);
+  const markers = useMemo(() => {
+  const map = new Map();
+  for (const a of activities) {
+    const key = dateKey(a.date); // du har dateKey i App.js nå — enten behold, eller flytt også ut
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push({ color: SPORT_COLORS[a.sport] || "#94a3b8" });
+  }
+  return map;
+}, [activities]);
 
   // Uke-aktiviteter: uken som inneholder selectedDate
   const weekStart = useMemo(() => startOfWeek(selectedDate), [selectedDate]);
@@ -486,11 +486,11 @@ const ActivitiesPage = () => {
         {/* Kalender (venstre) */}
         <CalendarMonth
           monthDate={monthDate}
-          onPrev={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth()-1, 1))}
-          onNext={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth()+1, 1))}
+          onPrev={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1))}
+          onNext={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
-          daySports={daySports}
+          markers={markers}
         />
 
         {/* Ukesliste (høyre) */}
@@ -622,87 +622,6 @@ const ActivitiesPage = () => {
   );
 };
 
-const CalendarMonth = ({ monthDate, onPrev, onNext, selectedDate, onSelectDate, daySports }) => {
-  const y = monthDate.getFullYear();
-  const m = monthDate.getMonth();
-  const grid = buildMonthGrid(y, m);
-  const monthLabel = monthDate.toLocaleDateString("no-NO", { month:"long", year:"numeric" });
-
-  const isInMonth = (d) => d.getMonth() === m;
-  const today = new Date();
-  const weekdayLabels = ["ma","ti","on","to","fr","lø","sø"];
-
-  return (
-    <div style={{ border:"1px solid #e2e8f0", borderRadius:16, background:"#fff", padding:16 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-        <button onClick={onPrev} style={navBtnStyle} aria-label="Forrige måned">‹</button>
-        <div style={{ fontWeight:700, color:"#0f172a", textTransform:"capitalize" }}>{monthLabel}</div>
-        <button onClick={onNext} style={navBtnStyle} aria-label="Neste måned">›</button>
-      </div>
-
-      {/* Ukedager */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(7, 1fr)", gap:6, marginBottom:6 }}>
-        {weekdayLabels.map((w) => (
-          <div key={w} style={{ color:"#64748b", fontSize:12, textAlign:"center" }}>{w}</div>
-        ))}
-      </div>
-
-      {/* Dager */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(7, 1fr)", gap:6 }}>
-        {grid.map((d, idx) => {
-          const k = dateKey(d);
-          const sports = daySports.get(k) || new Set();
-          const selected = isSameDay(d, selectedDate);
-          const isToday = isSameDay(d, today);
-          return (
-            <button
-              key={idx}
-              onClick={() => onSelectDate(d)}
-              style={{
-                border:"1px solid #e2e8f0",
-                borderRadius:10,
-                padding:"8px 6px",
-                height:64,
-                background: selected ? "rgba(59,130,246,0.08)" : "#fff",
-                opacity: isInMonth(d) ? 1 : 0.5,
-                cursor:"pointer"
-              }}
-              title={d.toLocaleDateString("no-NO")}
-            >
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <div style={{ fontWeight:600, color:"#0f172a" }}>{d.getDate()}</div>
-                {isToday && <div style={{ fontSize:10, color:"#3b82f6" }}>i dag</div>}
-              </div>
-
-              {/* prikker for sport(er) */}
-              <div style={{ marginTop:6, display:"flex", gap:6 }}>
-                {[...sports].slice(0,3).map((s) => (
-                  <span key={s} style={{
-                    display:"inline-block", width:10, height:10, borderRadius:9999,
-                    background: SPORT_COLORS[s] || "#94a3b8",
-                    border:"1px solid rgba(0,0,0,0.1)"
-                  }} />
-                ))}
-                {sports.size > 3 && (
-                  <span style={{ fontSize:10, color:"#64748b" }}>+{sports.size-3}</span>
-                )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const navBtnStyle = {
-  border:"1px solid #cbd5e1",
-  borderRadius:8,
-  padding:"4px 8px",
-  background:"transparent",
-  cursor:"pointer",
-  color:"#0f172a"
-};
 
 /* ================================
    Achievements (3 rader)
@@ -815,16 +734,7 @@ const BlocksPage = () => (
   <div style={{ maxWidth: 800 }}>
     <BackLink />
     <h2 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>Treningsblokker</h2>
-    <p style={{ color: "#475569", marginBottom: 16 }}>Planlegg perioder (f.eks. Base, Bygging, Topping). Kommer snart – enkel mock under.</p>
-
-    <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-      {["Base 4 uker", "Bygging 6 uker", "Topping 2 uker", "Konkurranse"].map((t, i) => (
-        <div key={i} style={{ border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", padding: 12 }}>
-          <div style={{ fontWeight: 600, color: "#0f172a" }}>{t}</div>
-          <div style={{ fontSize: 14, color: "#64748b" }}>Klikk for detaljer (kan kobles til egen CRUD senere).</div>
-        </div>
-      ))}
-    </div>
+    <PlanImportBlocks />
   </div>
 );
 

@@ -42,6 +42,10 @@
   },
   "proxy": "http://localhost:2000",
   "devDependencies": {
-    "postcss-preset-env": "^10.2.0"
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "postcss-preset-env": "^10.2.0",
+    "typescript": "^5.9.3"
   }
 }

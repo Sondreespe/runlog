@@ -137,59 +137,6 @@ function PlanList({ plans, onOpen, onImport, onReset }) {
 }
 
 function PlanDetail({ plan, completionsForPlan, onBack, onToggleDone, doneCount }) {
-  const [showOnCalendar, setShowOnCalendar] = useState(true);
-
-  // startmåned = måneden til første økt i planen (eller dagens)
-  const [monthDate, setMonthDate] = useState(() => {
-    const first = plan.sessions?.[0]?.date;
-    if (first) {
-      const [y, m] = first.split("-").map(Number);
-      return new Date(y, m - 1, 1);
-    }
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
-
-  const dateKey = (d) => {
-    const dt = new Date(d);
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth() + 1).padStart(2, "0");
-    const da = String(dt.getDate()).padStart(2, "0");
-    return `${y}-${m}-${da}`;
-  };
-
-  const addDays = (d, n) => {
-    const dt = new Date(d);
-    dt.setDate(dt.getDate() + n);
-    return dt;
-  };
-
-  const buildMonthGrid = (year, monthIdx) => {
-    const first = new Date(year, monthIdx, 1);
-    const firstDow = (first.getDay() + 6) % 7; // 0=Mon
-    const start = addDays(first, -firstDow);
-    const days = [];
-    for (let i = 0; i < 42; i++) days.push(addDays(start, i));
-    return days;
-  };
-
-  const sessionsByDate = useMemo(() => {
-    const map = new Map();
-    for (const s of plan.sessions) {
-      if (!map.has(s.date)) map.set(s.date, []);
-      map.get(s.date).push(s);
-    }
-    return map;
-  }, [plan.sessions]);
-
-  const y = monthDate.getFullYear();
-  const m = monthDate.getMonth();
-  const grid = useMemo(() => buildMonthGrid(y, m), [y, m]);
-  const monthLabel = monthDate.toLocaleDateString("no-NO", { month: "long", year: "numeric" });
-  const isInMonth = (d) => d.getMonth() === m;
-
-  const weekdayLabels = ["ma", "ti", "on", "to", "fr", "lø", "sø"];
-
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <button
@@ -199,120 +146,13 @@ function PlanDetail({ plan, completionsForPlan, onBack, onToggleDone, doneCount 
         ← Tilbake
       </button>
 
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-        <div>
-          <div style={{ fontWeight: 900, fontSize: 18 }}>{plan.name}</div>
-          <div style={{ opacity: 0.75, fontSize: 13 }}>
-            {doneCount}/{plan.sessions.length} gjennomført
-          </div>
-        </div>
-
-        <label style={{ display: "flex", gap: 8, alignItems: "center", userSelect: "none" }}>
-          <input
-            type="checkbox"
-            checked={showOnCalendar}
-            onChange={(e) => setShowOnCalendar(e.target.checked)}
-          />
-          Vis økter i kalender
-        </label>
-      </div>
-
-      {/* Kalender */}
-      <div style={{ border: "1px solid #e2e8f0", borderRadius: 16, background: "#fff", padding: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <button
-            onClick={() => setMonthDate(new Date(y, m - 1, 1))}
-            style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "4px 8px", background: "transparent", cursor: "pointer" }}
-            aria-label="Forrige måned"
-          >
-            ‹
-          </button>
-
-          <div style={{ fontWeight: 700, color: "#0f172a", textTransform: "capitalize" }}>{monthLabel}</div>
-
-          <button
-            onClick={() => setMonthDate(new Date(y, m + 1, 1))}
-            style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "4px 8px", background: "transparent", cursor: "pointer" }}
-            aria-label="Neste måned"
-          >
-            ›
-          </button>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 6 }}>
-          {weekdayLabels.map((w) => (
-            <div key={w} style={{ color: "#64748b", fontSize: 12, textAlign: "center" }}>{w}</div>
-          ))}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
-          {grid.map((d, idx) => {
-            const k = dateKey(d);
-            const sessions = sessionsByDate.get(k) || [];
-            const hasSessions = showOnCalendar && sessions.length > 0;
-
-            // om noen av øktene den dagen er gjennomført
-            const anyDone = sessions.some((s) => Boolean(completionsForPlan[s.id]));
-
-            return (
-              <div
-                key={idx}
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 10,
-                  padding: "8px 6px",
-                  minHeight: 76,
-                  background: hasSessions ? "rgba(0,0,0,0.03)" : "#fff",
-                  opacity: isInMonth(d) ? 1 : 0.5,
-                }}
-                title={d.toLocaleDateString("no-NO")}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontWeight: 700, color: "#0f172a" }}>{d.getDate()}</div>
-                  {hasSessions && (
-                    <div style={{ fontSize: 11, opacity: 0.75 }}>
-                      {sessions.length}×{anyDone ? " ✓" : ""}
-                    </div>
-                  )}
-                </div>
-
-                {hasSessions && (
-                  <div style={{ marginTop: 6, display: "grid", gap: 6 }}>
-                    {sessions.slice(0, 2).map((s) => {
-                      const done = Boolean(completionsForPlan[s.id]);
-                      return (
-                        <div
-                          key={s.id}
-                          title={s.structure}
-                          style={{
-                            fontSize: 11,
-                            padding: "4px 6px",
-                            borderRadius: 8,
-                            border: "1px solid #ddd",
-                            background: "#fff",
-                            textDecoration: done ? "line-through" : "none",
-                            opacity: done ? 0.65 : 1,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {s.type}
-                        </div>
-                      );
-                    })}
-                    {sessions.length > 2 && (
-                      <div style={{ fontSize: 11, opacity: 0.75 }}>+{sessions.length - 2} flere</div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+      <div>
+        <div style={{ fontWeight: 900, fontSize: 18 }}>{plan.name}</div>
+        <div style={{ opacity: 0.75, fontSize: 13 }}>
+          {doneCount}/{plan.sessions.length} gjennomført
         </div>
       </div>
 
-      {/* Øktliste */}
       <div style={{ display: "grid", gap: 10 }}>
         {plan.sessions.map((s) => {
           const done = Boolean(completionsForPlan[s.id]);
